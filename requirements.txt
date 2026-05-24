@@ -8,3 +8,6 @@ wordcloud
 matplotlib
 scikit-learn
 python-dotenv
+feedparser
+duckduckgo-search
+google-generativeai
