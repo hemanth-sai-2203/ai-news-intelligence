@@ -1,5 +1,7 @@
 # AI News Intelligence & Sentiment Analytics Dashboard
 
+**🚀 Live Application:** [View the Dashboard on Render](https://ai-news-intelligence-5old.onrender.com)
+
 A real-time AI-powered news intelligence dashboard using NLP, sentiment analysis, and interactive visualization techniques.
 
 ## Features

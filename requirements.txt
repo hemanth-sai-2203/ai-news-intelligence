@@ -2,7 +2,6 @@ streamlit
 pandas
 requests
 plotly
-transformers
 nltk
 wordcloud
 matplotlib
