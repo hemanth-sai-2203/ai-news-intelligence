@@ -36,10 +36,10 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* Dark premium background */
+    /* Clean SaaS background */
     .stApp {
-        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-        color: #e2e8f0;
+        background: #f8fafc;
+        color: #334155;
     }
 
     /* Global Font */
@@ -344,9 +344,8 @@ if st.session_state.app_data is not None:
             st.info(f"✨ **AI Query Optimization:** Original search '{metadata['original']}' yielded 0 results. The AI autonomously expanded the search to **'{metadata['searched']}'** using **{metadata['source']}** to find these results.")
         elif metadata.get('source') and 'Fallback' in metadata.get('source', ''):
             st.info(f"🔄 **Cascade Fallback Engaged:** Switched to **{metadata['source']}** to bypass API limitations and find historical/real-time data for '{metadata['searched']}'.")
-            
-        if True:
-            # ── PROCESSING ──────────────────────────────
+
+        # ── PROCESSING ──────────────────────────────
             processed_data = []
             all_text = ""
             raw_descriptions = ""
@@ -602,6 +601,71 @@ if st.session_state.app_data is not None:
                     )
                     st.plotly_chart(wf_fig, use_container_width=True)
 
+            # ── SENTIMENT TIMELINE ───────────────────────
+            st.markdown('<div class="section-header">Sentiment Timeline</div>', unsafe_allow_html=True)
+
+            timeline_df = df[['publishedAt', 'sentiment_score', 'sentiment', 'title']].copy()
+            # Only render if we have at least 2 distinct dates; otherwise show a note
+            unique_dates = timeline_df['publishedAt'].nunique()
+            if unique_dates < 2:
+                st.markdown("""
+                <div class="risk-explanation">
+                    <strong>Note:</strong> All fetched articles were published on the same date/time,
+                    so a timeline chart is not meaningful. Try searching a broader topic to get
+                    articles spanning multiple days.
+                </div>""", unsafe_allow_html=True)
+            else:
+                timeline_df = timeline_df.sort_values('publishedAt')
+                color_map_tl = {'Positive': '#22c55e', 'Neutral': '#f59e0b', 'Negative': '#ef4444'}
+                tl_fig = px.scatter(
+                    timeline_df,
+                    x='publishedAt',
+                    y='sentiment_score',
+                    color='sentiment',
+                    color_discrete_map=color_map_tl,
+                    hover_data={'title': True, 'sentiment_score': ':.2f', 'sentiment': True, 'publishedAt': False},
+                    title='Sentiment Score Over Time  (hover dots to read headline)',
+                    labels={'publishedAt': 'Published Date', 'sentiment_score': 'Sentiment Score (-1 to +1)'}
+                )
+                # Add a smoothed trend line via a separate scatter with lines
+                tl_fig.add_scatter(
+                    x=timeline_df['publishedAt'],
+                    y=timeline_df['sentiment_score'],
+                    mode='lines',
+                    line=dict(color='#94a3b8', width=1.5, dash='dot'),
+                    showlegend=False,
+                    hoverinfo='skip'
+                )
+                # Add a zero baseline
+                tl_fig.add_hline(
+                    y=0,
+                    line_dash='dash',
+                    line_color='#cbd5e1',
+                    annotation_text='Neutral baseline',
+                    annotation_position='bottom right',
+                    annotation_font_color='#94a3b8'
+                )
+                tl_fig.update_traces(marker=dict(size=12), selector=dict(mode='markers'))
+                tl_fig.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='#334155'),
+                    title_font=dict(color='#0f172a', size=14),
+                    legend=dict(font=dict(color='#475569'), title_text='Sentiment'),
+                    xaxis=dict(gridcolor='#e2e8f0', tickangle=-30),
+                    yaxis=dict(gridcolor='#e2e8f0', range=[-1.1, 1.1], zeroline=False),
+                    height=380
+                )
+                st.plotly_chart(tl_fig, use_container_width=True)
+                st.markdown("""
+                <div class="risk-explanation">
+                    <strong>How to read this:</strong> Each dot represents one article.
+                    Scores above 0 indicate positive tone; below 0 indicate negative tone.
+                    A downward trend over time suggests worsening media sentiment on this topic.
+                </div>""", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
             # ── NEWS FEED ──────────────────────────────
             st.markdown('<div class="section-header">Detailed News Feed</div>', unsafe_allow_html=True)
 
@@ -646,10 +710,10 @@ if st.session_state.app_data is not None:
                         display:inline-block;
                         margin-left: 8px;
                         font-size: 0.82rem;
-                        color: #63b3ed;
+                        color: #2563eb;
                         text-decoration: none;
                         font-weight: 500;
-                        border: 1px solid rgba(99,179,237,0.3);
+                        border: 1px solid #bfdbfe;
                         padding: 4px 14px;
                         border-radius: 20px;
                         transition: background 0.2s;">
@@ -666,11 +730,10 @@ if st.session_state.app_data is not None:
                 st.download_button("⬇️ Download CSV", csv, f"news_{topic.replace(' ', '_')}.csv", "text/csv")
 
 else:
-    # ── LANDING / WELCOME STATE ───────────────────
     st.markdown("""
     <div style="text-align:center; padding: 60px 0 40px;">
         <div style="font-size: 5rem; margin-bottom: 16px;">🧠</div>
-        <h2 style="color:#e2e8f0; font-weight:600; margin-bottom:12px;">Choose a topic and click Analyze</h2>
+        <h2 style="color:#0f172a; font-weight:600; margin-bottom:12px;">Choose a topic and click Analyze</h2>
         <p style="color:#64748b; font-size:1.1rem; max-width:600px; margin: 0 auto;">
             The dashboard will fetch live news articles, run NLP sentiment analysis, 
             calculate a risk score and generate keyword intelligence — all in seconds.
@@ -689,6 +752,6 @@ else:
             st.markdown(f"""
             <div class="kpi-card" style="text-align:left; padding: 28px;">
                 <div style="font-size:2.5rem; margin-bottom:12px;">{icon}</div>
-                <div style="font-size:1rem; font-weight:600; color:#e2e8f0; margin-bottom:10px;">{title}</div>
-                <div style="font-size:0.88rem; color:#94a3b8; line-height:1.6;">{desc}</div>
+                <div style="font-size:1rem; font-weight:600; color:#0f172a; margin-bottom:10px;">{title}</div>
+                <div style="font-size:0.88rem; color:#64748b; line-height:1.6;">{desc}</div>
             </div>""", unsafe_allow_html=True)
