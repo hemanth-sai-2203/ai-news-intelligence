@@ -251,6 +251,7 @@ with st.sidebar:
 
     st.markdown("### Quick Topics")
     quick_topics = {
+        "Custom Search...": "",
         "Artificial Intelligence": "Artificial Intelligence",
         "Bitcoin & Crypto": "Bitcoin crypto",
         "Climate Change": "Climate Change",
@@ -306,7 +307,7 @@ with col_search:
     topic = st.text_input(
         "Search topic",
         value=quick_topics[selected_quick],
-        placeholder="e.g. Bitcoin, Climate Change, Artificial Intelligence...",
+        placeholder="Enter any topic you wish to analyze...",
         label_visibility="collapsed"
     )
 with col_btn:
